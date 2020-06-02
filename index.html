@@ -1,1 +1,243 @@
-Hello, world!
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en">
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" 
+                               integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <title>Multiperson</title>
+    </head>
+    <body class="container" style="max-width:920px">
+        <!-- Title -->
+        <div>
+            <div class='row mt-5 mb-5'>
+                <div class='col text-center'>
+                    <p class="h3 font-weight-normal">Coherent Reconstruction of Multiple Humans from a Single Image</p>
+                </div>
+            </div>
+
+            <!-- authors -->
+            <div class='col text-center h5 font-weight-bold mb-1'>
+		    <a class="col-md-3 col-xs-7" href="https://jiangwenpl.github.io"><span>Wen Jiang*</span></a>
+		    <a class="col-md-3 col-xs-7" href="https://www.seas.upenn.edu/~nkolot"><span>Nikos Kolotouros*</span></a>
+            </div>
+            <div class='col text-center h5 font-weight-bold mb-3'>
+		    <a class="col-md-3 col-xs-7" href="https://www.seas.upenn.edu/~pavlakos"><span>Georgios Pavlakos</span></a>
+		    <a class="col-md-3 col-xs-7" href="http://www.cad.zju.edu.cn/home/xzhou"><span>Xiaowei Zhou</span></a>
+		    <a class="col-md-3 col-xs-7" href="https://www.cis.upenn.edu/~kostas"><span>Kostas Daniilidis</span></a>
+            </div>
+
+            <div class='row text-center font-weight-light mt-2 mb-2'>
+                <span class="col-md-12 col-xs-12" style="color:#007bff">*Equal contribution</span>
+            </div>
+
+	    <div>
+      	    <img width=100% src="files/teaser.jpg"/>
+	    </div>
+        </div>
+
+        <!-- Paper section -->
+        <div>
+            <hr>
+            <div class='row'>
+                <div class='col-md-3 col-sm-3 col-xs-12 text-center col-sm-3'>
+                    <div class="row mt-4">
+                        <a href="https://arxiv.org/pdf/1909.12828.pdf" style="max-width:200px; margin-left:auto; margin-right:auto">
+                            <img src="files/paper.png" alt="paper-snapshot" class="img-thumbnail" width="80%" style="box-shadow: 10px 10px 5px grey;">
+                        </a>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col">
+                            <a class="h5" href="https://arxiv.org/abs/1909.12828" style="margin-right:10px">
+                                <span>[Arxiv]</span>
+                            </a>
+                            <a class="h5" href="files/multiperson-supp.pdf" style="margin-right:10px">
+                                <span>[Supplementary]</span>
+                            </a>
+                            <a class="h5" href="https://github.com/JiangWenPL/multiperson" style="margin-right:10px">
+                                <span>[Code]</span>
+                            </a>
+                            <a class="h5" href="files/jiang2020multiperson.bib" target="_blank">
+                                <span>[Bibtex]</span>
+                            </a>
+                        </div>
+                      </div>
+                    </div>
+                    <div class='col-md-9 col-sm-9 col-xs-12'>
+                      <p class='h4 font-weight-bold '>Abstract</p>
+                      <p> 
+		      In this work, we address the problem of multi-person 3D pose estimation from a single image.
+		      A typical regression approach in the top-down setting of this problem would first detect all humans and then reconstruct each one of them independently.
+		      However, this type of predic- tion suffers from incoherent results, e.g., interpenetration and inconsistent depth ordering between the people in the scene.
+		      Our goal is to train a single network that learns to avoid these problems and generate a coherent 3D reconstruction of all the humans in the scene.
+		      To this end, a key design choice is the incorporation of the SMPL parametric body model in our top-down framework, which enables the use of two novel losses.
+		      First, a distance field-based collision loss penalizes interpenetration among the reconstructed people.
+		      Second, a depth ordering-aware loss reasons about occlusions and promotes a depth ordering of people that leads to a rendering
+		      which is consistent with the annotated instance segmentation.
+		      This provides depth supervision signals to the network, even if the image has no explicit 3D annotations.
+		      The experiments show that our approach outperforms previous methods on standard 3D pose benchmarks, while our proposed losses en- able more coherent reconstruction in natural images.
+                      </p>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <hr>
+
+            <div class='row text-center'>
+                <div class='col'>
+                    <p class='h2 mr-3'>Video</p>
+                </div>
+            </div>
+
+
+            <div class='row mt-3 text-center center-block' style=" margin-left:auto; margin-right:auto; max-width:560px">
+                <div class='col ml-1 mr-1' style="position: relative; width: 100%;height: 0;padding-bottom: 56%;">
+                    <iframe 
+			src="https://youtu.be/EC181I4ejbY",
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen
+                        style="position: absolute;width: 100%;height: 100%; left: 0; top: 0;"
+                    >
+                    </iframe>
+                </div>
+            </div>
+
+        </div>
+
+
+        <!-- Architecture, explaination -->
+        <div>
+            <hr>
+            <div class='row text-center'>
+                <div class='col'>
+                    <p class='h2'>Overview</p>
+                </div>
+            </div>
+
+	    <!--
+            <div class='row text-left'>
+                <div class='col'>
+			<p class='h5'><em> Architecture </em></p>
+	    	</div>
+	    </div>
+	    -->
+
+            <div class='row mt-3'>
+            <div class='col-md-6 col-sm-6 col-xs-12 align-middle mt-4'>
+      	    	<img width=100% src="files/teaser.jpg"/>
+	    </div>
+                <div class='col-md-6 col-sm-6 col-xs-12 align-middle mt-5'>
+                    <p class="text-break">
+		    We use an end-to-end top-down approach. Our model follows the R-CNN paradigm.
+		    We augment Faster-RCNN with a SMPL parameter regression branch.
+		    To reconstruct humans, we use the detected bounding box to sample from the corresponding region of the shared feature map.
+		    Our key novelty is the introduction of two novel geometric losses.
+                    </p>
+                </div>
+            </div>
+
+	    <!--
+            <div class='row text-left'>
+                <div class='col'>
+			<p class='h5'><em>Interpenetration loss</em></p>
+	    	</div>
+	    </div>
+	    -->
+
+            <div class='row mt-3'>
+            <div class='col-md-6 col-sm-6 col-xs-12 align-middle mt-5'>
+                    <p class="text-break">
+		    First, we penalize interpenetrations among the reconstructed people using a distance field-based loss.
+		    This loss function requires no additional annotations and encourages the network to regress meshes that do not overlap with each other.
+                    </p>
+            </div>
+            <div class='col-md-6 col-sm-6 col-xs-12 align-middle mt-4'>
+      	    	<img width=100% src="files/interpenetration_loss.jpg"/>
+	    </div>
+            </div>
+
+	    <!--
+            <div class='row text-left'>
+                <div class='col'>
+			<p class='h5'><em>Depth ordering-aware loss</em></p>
+	    	</div>
+	    </div>
+	    -->
+            <div class='row mt-3'>
+            <div class='col-md-6 col-sm-6 col-xs-12 align-middle mt-4'>
+      	    	<img width=100% src="files/depth_loss.jpg"/>
+	    </div>
+                <div class='col-md-6 col-sm-6 col-xs-12 align-middle mt-5'>
+                    <p class="text-break">
+		    Second, we leverage available instance segmentation annotations and apply a depth ordering-aware loss that promotes the reconstruction of a scene whose rendering is consistent with the annotations.
+                    </p>
+                </div>
+            </div>
+
+
+        </div>
+
+        <!-- Results, transformation -->
+        <div>
+            <hr>
+            <div class='row text-center'>
+                <div class='col'>
+                    <p class='h2'>Comparison with naive regression</p>
+                    <p class="text-left">
+		    Here we compare our method to naive regression approach that was trained without our geometric losses.
+		    Our method is able to predict the correct ordinal depth and avoid mesh collisions.
+                </div>
+            </div>
+            <div class='row'>
+                <div>
+      	    	    <video width=100% src="files/comparison.m4v", type="video/m4v" autoplay muted loop/>
+                </div>
+            </div>
+        </div>
+        <div>
+            <hr>
+            <div class='row text-center'>
+                <div class='col'>
+                    <p class='h2'>Additional results</p>
+                </div>
+            </div>
+            <div class='row'>
+                <div>
+      	    	    <video width=100% src="files/results_video.m4v", type="video/m4v" autoplay muted loop/>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ack -->
+        <div>
+            <hr>
+
+            <div class='row mb-5 text-center'>
+                <div class='col'>
+                    <p class='h2'>Acknowledgements</p>
+		    <div class='text-left'>
+		    <p>NK, GP and KD gratefully appreciate support through the following grants:
+		    NSF-IIP-1439681 (I/UCRC), NSF-IIS-1703319, NSF MRI 1626008, ARL RCTA W911NF-10-2-0016, ONR N00014-17-1-2093,
+		    ARL DCIST CRA W911NF-17-2-0181, the DARPA- SRC C-BRIC, by Honda Research Institute and a Google Daydream Research Award.
+		    XZ and WJ would like to acknowledge support from NSFC (No. 61806176) and Fundamental Research Funds for the Central Universities (2019QNA5022).
+		    We also want to thank <a href="https://www.cis.upenn.edu/~stephi">Stephen Phillips</a> for the video voiceover.
+		    <p>The design of this project page was based on <a href="https://www.guandaoyang.com/PointFlow/">this</a> website.
+		    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en">
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- Bootstrap CSS -->
