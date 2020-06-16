@@ -3,7 +3,7 @@ Code repository for the paper:
 **Coherent Reconstruction of Multiple Humans from a Single Image**  
 [Wen Jiang](https://jiangwenpl.github.io/)\*, [Nikos Kolotouros](https://www.seas.upenn.edu/~nkolot/)\*, [Georgios Pavlakos](https://www.seas.upenn.edu/~pavlakos/), [Xiaowei Zhou](http://www.cad.zju.edu.cn/home/xzhou/), [Kostas Daniilidis](http://www.cis.upenn.edu/~kostas/)  
 CVPR 2020
-[[paper](http://openaccess.thecvf.com/content_CVPR_2020/papers/Jiang_Coherent_Reconstruction_of_Multiple_Humans_From_a_Single_Image_CVPR_2020_paper.pdf)] [[project page](https://jiangwenpl.github.io/multiperson/)]
+[[paper](https://arxiv.org/pdf/2006.08586.pdf)] [[project page](https://jiangwenpl.github.io/multiperson/)]
 
 ![teaser](assets/teaser.png)
 
