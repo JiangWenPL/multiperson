@@ -16,7 +16,7 @@ from .smpl_common import get_smpl_target_single, dp_get_smpl_target_single
 class SMPLHead(nn.Module):
 
     def __init__(self, in_size=7, in_channels=256, num_convs=4, conv_out_channels=256,
-                 init_param_file='data/neutral_smpl_mean_params.h5',
+                 init_param_file='../data/neutral_smpl_mean_params.h5',
                  joint_names=None, joint_map=None, joint_regressor_extra=None, FOCAL_LENGTH=1000,
                  loss_cfg=dict(type='SMPLLoss'), implicity_size=1024,
                  ):
@@ -69,7 +69,7 @@ class SMPLHead(nn.Module):
         self.dec = nn.Linear(self.implicity_size, self.npose + 10 + 3)
 
         # Initialize SMPL model
-        self.smpl = SMPL('data/smpl')
+        self.smpl = SMPL('../data/smpl')
         self.FOCAL_LENGTH = FOCAL_LENGTH
         self.loss = build_loss(loss_cfg)
 
