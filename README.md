@@ -29,7 +29,7 @@ python3 setup.py install
 Download [our model data](https://drive.google.com/file/d/1y5aKzW9WL42wTfQnv-JJ0YSIgsdb_mJn/view?usp=sharing) and place them under `mmdetection/data`.
 This includes the model checkpoint and joint regressors.
 You also need to download the mean SMPL parameters from [here](https://people.eecs.berkeley.edu/~kanazawa/cachedir/hmr/neutral_smpl_mean_params.h5)
-Besides these files, you also need to download the *SMPL* model. You will need the [neutral model](http://smplify.is.tue.mpg.de) for training evaluation and running the demo code.
+Besides these files, you also need to download the *SMPL* model. You will need the [neutral model](http://smpl.is.tue.mpg.de/) for training evaluation and running the demo code.
 Please go to the websites for the corresponding projects and register to get access to the downloads section. In case you need to convert the models to be compatible with python3, please follow the
 instructions [here](https://github.com/vchoutas/smplx/tree/master/tools).
 
