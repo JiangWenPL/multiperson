@@ -120,3 +120,4 @@ dependencies:
     - trimesh==3.5.25
     - wcwidth==0.1.9
     - smplx
+    - configargparse

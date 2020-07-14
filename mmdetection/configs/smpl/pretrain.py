@@ -59,7 +59,7 @@ model = dict(
         type='SMPLHead',
         in_size=14,
         in_channels=256,
-        loss_cfg=dict(type='SMPLLoss', eval_pose=True, normalize_kpts=True),
+        loss_cfg=dict(type='SMPLLoss', normalize_kpts=True),
     ),
     smpl_weight=1,
 )
@@ -135,7 +135,6 @@ common_train_cfg = dict(
     with_pose=True,
     with_shape=True,
     with_trans=True,
-    val_every=500,
     # max_samples=1024
     square_bbox=square_bbox,
     # rot_factor=30,
@@ -221,7 +220,7 @@ datasets = [
     ),
 ]
 data = dict(
-    imgs_per_gpu=54,
+    imgs_per_gpu=4,
     workers_per_gpu=8,
     train=common_train_cfg,
     val=common_val_cfg,

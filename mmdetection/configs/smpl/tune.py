@@ -62,7 +62,7 @@ model = dict(
         type='SMPLHead',
         in_size=14,
         in_channels=256,
-        loss_cfg=dict(type='SMPLLoss', eval_pose=True, normalize_kpts=True,
+        loss_cfg=dict(type='SMPLLoss', normalize_kpts=True,
                       FOCAL_LENGTH=FOCAL_LENGTH,
                       adversarial_cfg=True,
                       nr_batch_rank=WITH_NR, img_size=(832, 512),
@@ -146,7 +146,6 @@ common_train_cfg = dict(
     with_pose=True,
     with_shape=True,
     with_trans=True,
-    val_every=500,
     # max_samples=1024
     square_bbox=square_bbox,
     mosh_path='data/h36m/extras/h36m_single_train_openpose.npz',
@@ -307,7 +306,7 @@ log_level = 'INFO'
 work_dir = './work_dirs/tune'
 load_from = None
 resume_from = osp.join(work_dir, 'latest.pth')
-workflow = [('train', 1), ('val', 1)]
+workflow = [('train', 1)]
 
 log_config = dict(
     interval=50,

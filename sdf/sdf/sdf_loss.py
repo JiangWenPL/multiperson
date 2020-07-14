@@ -86,10 +86,6 @@ class SDFLoss(nn.Module):
             vertices_grid = vertices_local.view(1,-1,1,1,3)
             # Sample from the phi grid
             phi_val = nn.functional.grid_sample(phi[i][None, None], vertices_grid).view(valid_people, -1)
-            if False and self.debugging:
-                with open(f'/NAS/home/mean_sdf.txt', 'a+') as f:
-                    for pt_val in (weights * phi_val).reshape(-1).detach().cpu():
-                        f.write(str(pt_val.item()) + '\n')
             # ignore the phi values for the i-th shape
             cur_loss = weights * phi_val
             if self.debugging:
