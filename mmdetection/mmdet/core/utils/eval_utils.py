@@ -234,16 +234,6 @@ class PanopticEvalHandler(EvalHandler):
         gt_keypoints_3d = gt_keypoints_3d[:, J24_TO_H36M, :-1].clone()
         gt_keypoints_3d = gt_keypoints_3d - gt_pelvis_smpl
 
-        # import ipdb
-        # ipdb.set_trace()
-        # inter_dict = pred_results['our']
-        # betas = torch.from_numpy(inter_dict['betas'])
-        # poses = torch.from_numpy(inter_dict['pose'].reshape(betas.shape[0], -1, 3))
-        # trans = torch.from_numpy(inter_dict['trans'].reshape(-1, 3))
-        # smpl_output = self.smpl(betas=betas, body_pose=poses[:, 1:], global_pose=poses[:, 0].unsqueeze(1), trans=trans,
-        #                         pose2rot=True)
-        # pred_vertices = smpl_output.vertices
-
         J_regressor_batch = self.J_regressor[None, :].expand(pred_vertices.shape[0], -1, -1).to(
             pred_vertices.device)
         # Get 14 predicted joints from the SMPL mesh

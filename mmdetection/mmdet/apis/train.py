@@ -429,19 +429,7 @@ def train_smpl_detector_fuse(model, datasets, cfg, **kwargs):
         runner.resume(cfg.resume_from)
     elif cfg.load_from:
         runner.load_checkpoint(cfg.load_from)
-    val_every = cfg.data.train.get('val_every', None)
-    val_loader = None
-    if val_every and val_every > 0:
-        val_loader = build_dataloader_fuse(
-            kwargs.get('val_dataset'),
-            cfg.data.imgs_per_gpu,
-            cfg.data.workers_per_gpu,
-            cfg.gpus,
-            dist=False)
-    if kwargs.get('debug', None):
-        import ipdb
-        ipdb.set_trace()
-    runner.run(data_loaders, cfg.workflow, cfg.total_epochs, val_every=val_every, val_loader=val_loader,
+    runner.run(data_loaders, cfg.workflow, cfg.total_epochs,
                time_limit=getattr(cfg, 'time_limit', None))
 
 
@@ -514,23 +502,11 @@ def train_adv_smpl_detector(model, datasets, cfg, **kwargs):
         runner.resume(cfg.resume_from)
     elif cfg.load_from:
         runner.load_checkpoint(cfg.load_from)
-    val_every = cfg.data.train.get('val_every', None)
-    val_loader = None
-    if val_every and val_every > 0:
-        val_loader = build_dataloader_fuse(
-            kwargs.get('val_dataset'),
-            cfg.data.imgs_per_gpu,
-            cfg.data.workers_per_gpu,
-            cfg.gpus,
-            dist=False)
-    if kwargs.get('debug', None):
-        import ipdb
-        ipdb.set_trace()
     re_weight = cfg.re_weight if hasattr(cfg, 're_weight') else dict()
     mosh_path = cfg.common_train_cfg.mosh_path
     mosh_data = np.load(mosh_path)
     mosh = {'shape': mosh_data['shape'].copy(), 'pose': mosh_data['pose'].copy()}
-    runner.run(data_loaders, cfg.workflow, cfg.total_epochs, val_every=val_every, val_loader=val_loader,
+    runner.run(data_loaders, cfg.workflow, cfg.total_epochs,
                time_limit=getattr(cfg, 'time_limit', None), re_weight=re_weight, mosh=mosh,
                log_grad=cfg.get('log_grad', False))
 

@@ -2,6 +2,16 @@
 
 Here we provide a faster reimplementation of the Neural 3D Mesh Renderer. More specifically we reimplemented the forward pass of the rasterization process.
 Everything else is kept the same with the original repo for backwards compatibility.
+If you use our optimized version of NMR for your research, consider also citing our work:
+
+```
+@Inproceedings{jiang2020mpshape,
+Title          = {Coherent Reconstruction of Multiple Humans from a Single Image},
+Author         = {Jiang, Wen and Kolotouros, Nikos and Pavlakos, Georgios and Zhou, Xiaowei and Daniilidis, Kostas},
+Booktitle      = {CVPR},
+Year           = {2020}
+}
+```
 
 # Neural 3D Mesh Renderer (CVPR 2018)
 
@@ -73,13 +83,3 @@ From left to right: reference image, initial state, and optimization process.
     year={2018}
 }
 ```
-
-If you use our optimized version of NMR for your research, consider also citing our work
-'''
-@Inproceedings{jiang2020mpshape,
-Title          = {Coherent Reconstruction of Multiple Humans from a Single Image},
-Author         = {Jiang, Wen and Kolotouros, Nikos and Pavlakos, Georgios and Zhou, Xiaowei and Daniilidis, Kostas},
-Booktitle      = {CVPR},
-Year           = {2020}
-}
-'''

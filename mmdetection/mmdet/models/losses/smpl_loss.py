@@ -65,7 +65,7 @@ def adversarial_loss(discriminator, pred_pose_shape, real_pose_shape):
 @LOSSES.register_module
 class SMPLLoss(nn.Module):
 
-    def __init__(self, beta=1.0, reduction='mean', loss_weight=1.0, eval_pose=False, re_weight=None,
+    def __init__(self, beta=1.0, reduction='mean', loss_weight=1.0, re_weight=None,
                  normalize_kpts=False, pad_size=False, JOINT_REGRESSOR_H36M='data/J_regressor_h36m.npy',
                  debugging=False, adversarial_cfg=None, use_sdf=False, FOCAL_LENGTH=1000,
                  kpts_loss_type='L1Loss', kpts_3d_loss_type=None, img_size=None,
@@ -79,10 +79,10 @@ class SMPLLoss(nn.Module):
         if kpts_3d_loss_type is not None:
             self.criterion_3d_keypoints = getattr(nn, kpts_3d_loss_type)(reduction='none')
         self.criterion_regr = nn.MSELoss()
-        self.eval_pose = eval_pose
         self.re_weight = re_weight
         self.normalize_kpts = normalize_kpts
         self.pad_size = pad_size
+        self.FOCAL_LENGTH = FOCAL_LENGTH
         self.debugging = debugging
         # Initialize SMPL model
         self.smpl = SMPL('data/smpl')
@@ -166,9 +166,9 @@ class SMPLLoss(nn.Module):
                                 torch.abs(pred_bboxes[..., 1] - pred_bboxes[..., 3]))
         valid_boxes = (torch.abs(pred_bboxes[..., 0] - pred_bboxes[..., 2]) > 5) & (torch.abs(
             pred_bboxes[..., 1] - pred_bboxes[..., 3]) > 5)
-        crop_translation[..., 2] = 2 * self.camera.FOCAL_LENGTH / (1e-6 + pred_camera[..., 0] * bboxes_size)
+        crop_translation[..., 2] = 2 * self.FOCAL_LENGTH / (1e-6 + pred_camera[..., 0] * bboxes_size)
         rotation_Is = torch.eye(3).unsqueeze(0).repeat(batch_size, 1, 1).to(pred_joints.device)
-        depth = 2 * self.camera.FOCAL_LENGTH / (1e-6 + pred_camera[..., 0] * bboxes_size)
+        depth = 2 * self.FOCAL_LENGTH / (1e-6 + pred_camera[..., 0] * bboxes_size)
         translation = torch.zeros((batch_size, 3), dtype=pred_camera.dtype).to(
             pred_joints.device)
         translation[:, :-1] = depth[:, None] * (center_pts + pred_camera[:, 1:] * bboxes_size.unsqueeze(
@@ -180,7 +180,7 @@ class SMPLLoss(nn.Module):
                                              rotation_Is,
                                              translation,
                                              focal_length,
-                                             center=img_size / 2)
+                                             img_size / 2)
         gt_keypoints_2d_orig = gt_keypoints_2d.clone()
         pred_keypoints_2d_smpl_orig = pred_keypoints_2d_smpl.clone()
         if self.normalize_kpts:
@@ -302,84 +302,6 @@ class SMPLLoss(nn.Module):
 
             loss_dict.update({'loss_batch_rank': batch_rank_loss, 'num_intruded_pixels': num_intruded_pixels})
 
-        if self.nr_batch_rank:
-            device = pred_vertices.device
-            nr_loss = torch.zeros(len(best_idxs)).to(pred_vertices.device)
-            depth_loss = torch.zeros(len(best_idxs)).to(pred_vertices.device)
-            erode_mask_loss = torch.zeros(len(best_idxs)).to(pred_vertices.device)
-            mask_iou_loss = torch.zeros(len(best_idxs)).to(pred_vertices.device)
-            pixels_dropped = torch.tensor(0).float().to(device)
-            K = torch.eye(3, device=device)
-            K[0, 0] = K[1, 1] = self.FOCAL_LENGTH
-            K[2, 2] = 1
-            K[1, 2] = K[0, 2] = self.image_size / 2  # Because the neural renderer only support squared images
-            K = K.unsqueeze(0)  # Our batch size is 1
-            R = torch.eye(3, device=device).unsqueeze(0)
-            t = torch.zeros(3, device=device).unsqueeze(0)
-
-            for bid, ids in enumerate(best_idxs):
-                if len(ids) <= 1 or scene[bid].max() < 1:
-                    continue
-                ids = torch.tensor(ids)
-                verts = pred_vertices[valid_boxes][ids] + translation[valid_boxes][ids].unsqueeze(
-                    1)  # num_personx6890x3
-                cur_pose_idxs = pose_idx[valid_boxes][ids, 0]
-                with torch.no_grad():
-                    pose_idxs_int = cur_pose_idxs.int()
-                    has_mask_gt = torch.zeros_like(pose_idxs_int)
-                    for has_mask_idx, cur_pid in enumerate(pose_idxs_int):
-                        has_mask_gt[has_mask_idx] = 1 if torch.sum(scene[bid] == (cur_pid + 1).item()) > 0 else 0
-
-                if has_mask_gt.sum() < 1:
-                    continue
-
-                verts = verts[has_mask_gt > 0]
-                cur_pose_idxs = cur_pose_idxs[has_mask_gt > 0]
-
-                bs, nv = verts.shape[:2]
-                face_tensor = torch.tensor(self.smpl.faces.astype(np.int64), dtype=torch.long,
-                                           device=device).unsqueeze_(0).repeat([bs, 1, 1])
-                bs, nf = face_tensor.shape[:2]
-                margin = 1. / (scene[bid].max().item() + 1)  # 1. / (len(ids) + 2)
-                half_margin = margin / 2
-                faces_idx = face_tensor + (torch.arange(bs, dtype=torch.long).to(device) * nv)[:, None, None]
-
-                # Invoke ones_like because 0 is background
-                textures = torch.ones_like(faces_idx).float() + cur_pose_idxs.to(device)[:, None, None]
-                textures = textures * margin
-                textures = textures.reshape(-1, 3)[None, :, None, None, None]  # 1 x num_faces x 1 x 1 x 1 x 3
-
-                if self.nr_batch_rank:
-                    rgb, depth, mask = self.neural_renderer(verts.reshape(-1, 3).unsqueeze(0),
-                                                            faces_idx.reshape(-1, 3).unsqueeze(0).int(),
-                                                            textures=textures, K=K, R=R, t=t,
-                                                            dist_coeffs=torch.tensor([[0., 0., 0., 0., 0.]],
-                                                                                     device=device))
-
-                predicted_scene = rgb[0, 0, self.h_diff:rgb.shape[-2] - self.h_diff,
-                                  self.w_diff:rgb.shape[-1] - self.w_diff]
-                pixels_dropped += torch.sum(torch.isnan(predicted_scene))
-                predicted_scene[torch.isnan(predicted_scene)] = 0
-                alpha_scene = rgb[0, -1, self.h_diff:rgb.shape[-2] - self.h_diff,
-                              self.w_diff:rgb.shape[-1] - self.w_diff]
-                pixels_dropped += torch.sum(torch.isnan(alpha_scene))
-                alpha_scene[torch.isnan(alpha_scene)] = 0
-                p_predicted_scene = predicted_scene.unsqueeze(0).expand([bs, -1, -1])
-                pids = (cur_pose_idxs + 1)[:, None, None].type(scene[bid].dtype)
-                gt_scene = scene[bid].float() * margin
-
-                # Locate the part to penalize on
-                with torch.no_grad():
-                    marginalize_pids = (pids.float() * margin)
-                    pred_foreground = (marginalize_pids - half_margin < p_predicted_scene) & (
-                            marginalize_pids + half_margin > p_predicted_scene)
-                    target_side_mask = ((pids != scene[bid]) & (scene[bid] > 0) & pred_foreground).float()
-                error_scene = ((p_predicted_scene - gt_scene) ** 2) * target_side_mask  # NOTE: There might be a bug.
-                nr_loss[bid] = error_scene.mean()
-
-            loss_dict['loss_render'] = nr_loss
-            loss_dict['pixels_dropped'] = pixels_dropped
-
         if self.re_weight:
             for k, v in self.re_weight.items():
                 if k.startswith('adv_loss'):
@@ -387,64 +309,6 @@ class SMPLLoss(nn.Module):
                 else:
                     loss_dict[f'loss_{k}'] *= v
 
-        if self.eval_pose:
-            # 3D pose evaluation
-            with torch.no_grad():
-                # Regressor broadcasting
-                # Get 14 ground truth joints
-                # If we want to evaluate on MuPoTS-3D, the strategy for finding most confidence
-                # indexes should be changed as we are assuming there are only one person for each images here.
-
-                idxs_in_batch = idxs_in_batch.clone().int()[:, 0]
-                num_imgs = idxs_in_batch.max().item()
-                selected_idx = list()
-                full_idxs = torch.arange(idxs_in_batch.shape[0])
-                for idx in set(idxs_in_batch.tolist()):
-                    arg_max_conf = bboxes_confidence[idx == idxs_in_batch].argmax().item()
-                    idx_to_select = full_idxs[idxs_in_batch == idx][arg_max_conf]
-                    if gt_keypoints_3d[idx_to_select][:, -1].sum() < 1:
-                        continue
-                    selected_idx.append(idx_to_select)
-                if selected_idx:
-                    selected_idx = torch.tensor(selected_idx).long()
-                    # To evaluate on bbox with highest confidence value.
-                    gt_keypoints_3d = gt_keypoints_3d[selected_idx]
-                    pred_keypoints_3d_smpl = pred_joints[selected_idx]
-                    pred_vertices = pred_vertices[selected_idx]
-
-                    visible_kpts = gt_keypoints_3d[:, J24_TO_J14, -1].clone()
-                    visible_kpts[visible_kpts > 0.1] = 1
-                    visible_kpts[visible_kpts <= 0.1] = 0
-                    gt_pelvis_smpl = gt_keypoints_3d[:, [14], :-1].clone()
-                    gt_keypoints_3d = gt_keypoints_3d[:, J24_TO_J14, :-1].clone()
-                    gt_keypoints_3d = gt_keypoints_3d - gt_pelvis_smpl
-
-                    J_regressor_batch = self.J_regressor[None, :].expand(pred_vertices.shape[0], -1, -1).to(
-                        pred_vertices.device)
-                    # Get 14 predicted joints from the SMPL mesh
-                    pred_keypoints_3d_smpl = torch.matmul(J_regressor_batch, pred_vertices)
-                    pred_pelvis_smpl = pred_keypoints_3d_smpl[:, [0], :].clone()
-                    pred_keypoints_3d_smpl = pred_keypoints_3d_smpl[:, H36M_TO_J14, :]
-                    pred_keypoints_3d_smpl = pred_keypoints_3d_smpl - pred_pelvis_smpl
-
-                    # Compute error metrics
-
-                    # Absolute error (MPJPE)
-                    error_smpl = (torch.sqrt(
-                        ((pred_keypoints_3d_smpl - gt_keypoints_3d) ** 2).sum(dim=-1)) * visible_kpts).sum(
-                        -1) / visible_kpts.sum(-1)
-
-                    # Reconstuction_error
-                    r_error_smpl = reconstruction_error(pred_keypoints_3d_smpl.cpu().numpy(),
-                                                        gt_keypoints_3d.cpu().numpy(),
-                                                        reduction=None, visible_kpts=visible_kpts.cpu().numpy())
-                    loss_dict['MPJPE'] = error_smpl * 1000  # m to mm
-                    loss_dict['r_error'] = (torch.tensor(r_error_smpl) * 1000).to(
-                        pred_keypoints_3d_smpl.device)  # m to mm
-
-                else:
-                    loss_dict['MPJPE'] = torch.FloatTensor(1).fill_(100.).to(pred_joints.device)
-                    loss_dict['r_error'] = torch.FloatTensor(1).fill_(100.).to(pred_joints.device)
         return loss_dict
 
     def keypoint_loss(self, pred_keypoints_2d, gt_keypoints_2d):

@@ -13,7 +13,7 @@ def get_smpl_target_single(self, pos_proposals, pos_assigned_gt_inds, gt_kpts2d,
     vertices_targets, idxs_in_batch, pose_idx = list(), list(), list(), list(), list(), list(), list(), list(), list(), list()
     if num_pos > 0:
         smpl_output = self.smpl(betas=gt_shapes, body_pose=gt_poses[:, 1:],
-                                global_pose=gt_poses[:, None, 0], pose2rot=True)
+                                global_orient=gt_poses[:, None, 0], pose2rot=True)
         vertices = smpl_output.vertices
         pos_assigned_gt_inds = pos_assigned_gt_inds.cpu().numpy()
         for i in range(num_pos):
@@ -53,7 +53,7 @@ def dp_get_smpl_target_single(self, pos_proposals, pos_assigned_gt_inds, gt_kpts
         list(), list(), list(), list(), list(), list()
     if num_pos > 0:
         smpl_output = self.smpl(betas=gt_shapes, body_pose=gt_poses[:, 1:],
-                                global_pose=gt_poses[:, None, 0], pose2rot=True)
+                                global_orient=gt_poses[:, None, 0], pose2rot=True)
         vertices = smpl_output.vertices
         pos_assigned_gt_inds = pos_assigned_gt_inds.cpu().numpy()
         for i in range(num_pos):

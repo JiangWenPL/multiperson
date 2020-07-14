@@ -261,7 +261,6 @@ class Runner(object):
         self.mode = 'train'
         self.data_loader = data_loader
         self._max_iters = self._max_epochs * len(data_loader)
-        val_every = kwargs.get('val_every', None)
         self.call_hook('before_train_epoch')
         start_time = datetime.datetime.now()
         time_limit = kwargs.get('time_limit', None)
@@ -292,16 +291,6 @@ class Runner(object):
                 if (cur_time - start_time).total_seconds() > time_limit:
                     break
 
-            if val_every and val_every > 0:
-                if (i + 1) % val_every == 0:
-                    val_loader = deepcopy(kwargs.get('val_loader'))
-                    self.val(val_loader, **kwargs)
-
-                    # Reset all the staff.
-                    self.mode = 'train'
-                    self.model.train()
-                    self.data_loader = data_loader
-                    torch.cuda.empty_cache()  # To avoid weird OOM issues.
             if self.exit_code is not None:
                 break
 

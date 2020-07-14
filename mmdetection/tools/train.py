@@ -2,7 +2,6 @@ from __future__ import division
 
 import argparse
 import os
-from mmcv import Config
 import sys
 
 PROJECT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -13,6 +12,7 @@ import torch
 torch.multiprocessing.set_sharing_strategy('file_system')
 
 print(sys.executable)
+from mmcv import Config
 from mmdet import __version__
 from mmdet.datasets import get_dataset
 from mmdet.apis import (train_detector, init_dist, get_root_logger,
