@@ -8,9 +8,11 @@ For the 3D fitting, our code expects a pkl file with the same format as the ones
 To use our code you can run:
 ```
 python smplifyx/main.py --config=cfg_files/fit_smpl.yaml --model_folder=/path/to/smpl --prior_folder=/path/to/prior --dataset_file=/path/to/pkl
-```
----
+``` 
+For the fitting, you will need the SMPL model. The argument ```model_folder``` indicates the folder where the model files are stored. Please take a look below at the SMPLify-X documentation for more details.
+Also, you will need the GMM prior file ```gmm_08.pkl```. The argument ```prior_folder``` indicates the folder where this file is stored. You can download this file from the [SMPLify webpage](http://smplify.is.tue.mpg.de/). It is located in the folder ```smplify_public/code/models```.
 
+---
 
 ## Expressive Body Capture: 3D Hands, Face, and Body from a Single Image
 
