@@ -95,7 +95,6 @@ dependencies:
     - jedi==0.16.0
     - kiwisolver==1.1.0
     - matplotlib==3.2.0rc3
-    - mmcv==0.2.10
     - networkx==2.4
     - opencv-python==4.2.0.32
     - parso==0.6.2
@@ -119,5 +118,5 @@ dependencies:
     - traitlets==4.3.3
     - trimesh==3.5.25
     - wcwidth==0.1.9
-    - smplx
+    - smplx==0.1.13
     - configargparse

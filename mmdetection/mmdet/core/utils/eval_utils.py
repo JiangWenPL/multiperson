@@ -1,13 +1,13 @@
 import os.path as osp
 import torch
 import torchvision
-from mmdetection.mmdet.models.utils.smpl_utils import batch_rodrigues, J24_TO_J14, H36M_TO_J14, J24_TO_H36M
+from mmdetection.mmdet.models.utils.smpl_utils import batch_rodrigues, J24_TO_J14, H36M_TO_J14, J24_TO_H36M, perspective_projection
 from mmdetection.mmdet.models.utils.pose_utils import reconstruction_error, vectorize_distance
 from mmdetection.mmdet.core.utils import AverageMeter
-from mmdetection.mmdet.models.utils.camera import PerspectiveCamera
 from mmdetection.mmdet.models.utils.smpl.renderer import Renderer
-from mmdetection.mmdet.models.utils.smpl.body_models import SMPL, JointMapper
+from mmdetection.mmdet.models.utils.smpl.smpl import SMPL
 from mmdetection.mmdet.models.utils.smpl.viz import draw_skeleton, J24_TO_J14, get_bv_verts, plot_pose_H36M
+from mmdetection.mmdet.models.utils.smpl.collision_volume import CollisionVolume
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,7 +15,6 @@ import abc
 import math
 import h5py
 import scipy.io as scio
-from sdf import CollisionVolume
 
 
 def compute_scale_transform(S1, S2):
@@ -94,7 +93,6 @@ class EvalHandler(metaclass=abc.ABCMeta):
         self.writer = writer
         self.viz_dir = viz_dir
         self.work_dir = work_dir
-        self.camera = PerspectiveCamera(FOCAL_LENGTH=FOCAL_LENGTH)
         self.FOCAL_LENGTH = FOCAL_LENGTH
         if self.viz_dir:
             self.renderer = Renderer(focal_length=FOCAL_LENGTH)
@@ -189,18 +187,7 @@ class PanopticEvalHandler(EvalHandler):
                            7, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34]
         extra_joints = [8, 5, 45, 46, 4, 7, 21, 19, 17, 16, 18, 20, 47, 48, 49, 50, 51, 52, 53, 24, 26, 25, 28, 27]
         joints = torch.tensor(openpose_joints + extra_joints, dtype=torch.int32)
-        joint_mapper = JointMapper(joints)
-        smpl_params = dict(model_folder='data/smpl',
-                           joint_mapper=joint_mapper,
-                           create_glb_pose=True,
-                           body_pose_param='identity',
-                           create_body_pose=True,
-                           create_betas=True,
-                           # create_trans=True,
-                           dtype=torch.float32,
-                           vposer_ckpt=None,
-                           gender='neutral')
-        self.smpl = SMPL(**smpl_params)
+        self.smpl = SMPL('data/smpl')
         self.J_regressor = torch.from_numpy(np.load(JOINT_REGRESSOR_H36M)).float()
         self.collision_meter = AverageMeter('P3', ':.2f')
         self.collision_volume = CollisionVolume(self.smpl.faces, grid_size=64).cuda()
@@ -321,18 +308,7 @@ class MuPoTSEvalHandler(EvalHandler):
                            7, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34]
         extra_joints = [8, 5, 45, 46, 4, 7, 21, 19, 17, 16, 18, 20, 47, 48, 49, 50, 51, 52, 53, 24, 26, 25, 28, 27]
         joints = torch.tensor(openpose_joints + extra_joints, dtype=torch.int32)
-        joint_mapper = JointMapper(joints)
-        smpl_params = dict(model_folder='data/smpl',
-                           joint_mapper=joint_mapper,
-                           create_glb_pose=True,
-                           body_pose_param='identity',
-                           create_body_pose=True,
-                           create_betas=True,
-                           # create_trans=True,
-                           dtype=torch.float32,
-                           vposer_ckpt=None,
-                           gender='neutral')
-        self.smpl = SMPL(**smpl_params)
+        self.smpl = SMPL('data/smpl')
         self.J_regressor = torch.from_numpy(np.load(JOINT_REGRESSOR_H36M)).float()
         self.result_list = list()
         self.result_list_2d = list()
@@ -369,9 +345,8 @@ class MuPoTSEvalHandler(EvalHandler):
         img_size = torch.zeros(batch_size, 2).to(pred_keypoints_3d_smpl.device)
         img_size += torch.tensor(img.shape[:-3:-1], dtype=img_size.dtype).to(img_size.device)
         rotation_Is = torch.eye(3).unsqueeze(0).repeat(batch_size, 1, 1).to(pred_keypoints_3d_smpl.device)
-        pred_keypoints_2d_smpl = self.camera(pred_keypoints_3d_smpl, batch_size=batch_size, rotation=rotation_Is,
-                                             translation=pred_translation,
-                                             center=img_size / 2)
+
+        pred_keypoints_2d_smpl = perspective_projection(pred_keypoints_3d_smpl, rotation_Is, pred_translation, self.FOCAL_LENGTH, img_size / 2)
         if self.viz_dir:
             img = img.clone() * torch.tensor([0.229, 0.224, 0.225]).view(3, 1, 1) + torch.tensor(
                 [0.485, 0.456, 0.406]).view(3, 1, 1)

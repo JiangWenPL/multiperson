@@ -34,7 +34,7 @@ from mmdetection.mmdet.models.utils.pose_utils import reconstruction_error
 import numpy as np
 from mmdetection.mmdet.core.utils.eval_utils import H36MEvalHandler, EvalHandler, PanopticEvalHandler, \
     MuPoTSEvalHandler
-from mmdetection.mmdet.models.utils.smpl.body_models import SMPL, JointMapper
+from mmdetection.mmdet.models.utils.smpl.smpl import SMPL
 import matplotlib.pyplot as plt
 import neural_renderer as nr
 
@@ -43,18 +43,7 @@ openpose_joints = [24, 12, 17, 19, 21, 16, 18, 20, 0, 2, 5, 8, 1, 4,
                    7, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34]
 extra_joints = [8, 5, 45, 46, 4, 7, 21, 19, 17, 16, 18, 20, 47, 48, 49, 50, 51, 52, 53, 24, 26, 25, 28, 27]
 joints = torch.tensor(openpose_joints + extra_joints, dtype=torch.int32)
-joint_mapper = JointMapper(joints)
-smpl_params = dict(model_folder='data/smpl',
-                   joint_mapper=joint_mapper,
-                   create_glb_pose=True,
-                   body_pose_param='identity',
-                   create_body_pose=True,
-                   create_betas=True,
-                   # create_trans=True,
-                   dtype=torch.float32,
-                   vposer_ckpt=None,
-                   gender='neutral')
-smpl = SMPL(**smpl_params)
+smpl = SMPL('data/smpl')
 denormalize = lambda x: x.transpose([1, 2, 0]) * np.array([0.229, 0.224, 0.225])[None, None, :] + \
                         np.array([0.485, 0.456, 0.406])[None, None,]
 
